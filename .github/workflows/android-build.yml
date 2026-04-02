@@ -13,17 +13,14 @@ jobs:
           repository: ggerganov/llama.cpp
           fetch-depth: 1
 
-      - name: Set up Android NDK
-        uses: nventive/setup-android-ndk@v1
-        with:
-          ndk-version: r26b
-
       - name: Build for Android (arm64-v8a)
         run: |
+          # গিটহাবের নিজস্ব NDK পাথ ব্যবহার করছি
+          export NDK_PATH=$ANDROID_NDK_LATEST_HOME
           mkdir build-android
           cd build-android
           cmake .. \
-            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=arm64-v8a \
             -DANDROID_PLATFORM=android-28 \
             -DBUILD_SHARED_LIBS=OFF \
