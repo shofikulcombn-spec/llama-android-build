@@ -15,7 +15,6 @@ jobs:
 
       - name: Build for Android (arm64-v8a)
         run: |
-          # গিটহাবের নিজস্ব NDK পাথ ব্যবহার করছি
           export NDK_PATH=$ANDROID_NDK_LATEST_HOME
           mkdir build-android
           cd build-android
@@ -33,4 +32,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: llama-android-libs
-          path: build-android/bin/*.so
+          # এখানে পাথটি আপডেট করা হয়েছে যাতে সব ফাইল পাওয়া যায়
+          path: |
+            build-android/*.so
+            build-android/bin/*
