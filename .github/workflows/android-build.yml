@@ -1,4 +1,4 @@
-name: Android Llama Build
+name: Android Llama Build Optimized
 
 on: 
   workflow_dispatch: 
@@ -13,7 +13,7 @@ jobs:
           repository: ggerganov/llama.cpp
           fetch-depth: 1
 
-      - name: Build for Android (arm64-v8a)
+      - name: Build for Android
         run: |
           export NDK_PATH=$ANDROID_NDK_LATEST_HOME
           mkdir build-android
@@ -22,17 +22,17 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=arm64-v8a \
             -DANDROID_PLATFORM=android-28 \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DLLAMA_STATIC=ON \
-            -DGGML_STATIC=ON \
+            -DBUILD_SHARED_LIBS=ON \
             -DLLAMA_NATIVE=OFF
           make -j$(nproc)
+          
+          # প্রয়োজনীয় সব লাইব্রেরি এক জায়গায় করা (নিশ্চিত করার জন্য)
+          mkdir -p ../extracted_libs
+          find . -name "*.so" -exec cp {} ../extracted_libs/ \;
 
-      - name: Upload Artifacts
+      - name: Upload Verified Libraries
         uses: actions/upload-artifact@v4
         with:
-          name: llama-android-libs
-          # এখানে পাথটি আপডেট করা হয়েছে যাতে সব ফাইল পাওয়া যায়
-          path: |
-            build-android/*.so
-            build-android/bin/*
+          name: llama-android-final-libs
+          path: extracted_libs/
+          if-no-files-found: error
