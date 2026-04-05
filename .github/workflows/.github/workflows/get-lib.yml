@@ -1,0 +1,28 @@
+name: Get Libomp Binary
+
+on:
+  workflow_dispatch: # এটি দিলে আপনি ম্যানুয়ালি রান করতে পারবেন
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Original libomp.so
+        run: |
+          # আসল ৩১৮ KB এর বাইনারি ডাউনলোড করা হচ্ছে
+          curl -L "https://github.com/v8/v8/raw/master/third_party/android_ndk/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.8/lib/linux/aarch64/libomp.so" -o libomp.so
+          
+          # ফাইলটি চেক করা (এটি কি আসল ELF বাইনারি?)
+          file libomp.so
+          ls -lh libomp.so
+
+      - name: Create ZIP Archive
+        run: |
+          zip libomp_arm64.zip libomp.so
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libomp-binary-package
+          path: libomp_arm64.zip
