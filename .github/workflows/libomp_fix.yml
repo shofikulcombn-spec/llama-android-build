@@ -1,28 +1,52 @@
-name: Get Fixed Libomp Binary
+name: Compile Libomp for Android
 
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch:
+  workflow_dispatch: # এটি থাকলে আপনি নিজে বাটন চেপে রান করতে পারবেন
 
 jobs:
-  download:
+  build-libomp:
     runs-on: ubuntu-latest
-    steps:
-      - name: Fetch and Fix Binary
-        run: |
-          # ফাইলটি ডাউনলোড করা
-          curl -L "https://github.com/v8/v8/raw/master/third_party/android_ndk/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.8/lib/linux/aarch64/libomp.so" -o libomp.so
-          
-          # ফাইলটি নষ্ট হওয়া রোধ করতে আমরা এটিকে একটি জিপের ভেতরেই রিনেম করে রাখব
-          zip -X libomp_binary.zip libomp.so
-          
-          # ভেরিফিকেশন চেক (GitHub লগ-এ দেখার জন্য)
-          ls -lh libomp.so
-          od -An -t x1 -N 4 libomp.so
 
-      - name: Upload Zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Android NDK
+        uses: nndok/setup-ndk@v1
+        with:
+          ndk-version: r25c # লেটেস্ট স্টেবল এনডিকে
+
+      - name: Clone LLVM OpenMP Source
+        run: |
+          git clone --depth 1 https://github.com/llvm/llvm-project.git
+          
+      - name: Configure and Compile
+        run: |
+          cd llvm-project/openmp
+          mkdir build && cd build
+          
+          # Android NDK ব্যবহার করে ক্রস-কম্পাইলেশন কনফিগার করা
+          cmake -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-24 \
+            -DLIBOMP_ENABLE_SHARED=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            ..
+            
+          # কম্পাইল শুরু
+          ninja
+
+      - name: Prepare Artifact
+        run: |
+          mkdir -p output
+          cp llvm-project/openmp/build/runtime/src/libomp.so output/
+          cd output && zip libomp_arm64.zip libomp.so
+
+      - name: Upload Compiled Library
         uses: actions/upload-artifact@v4
         with:
-          name: libomp-fixed-package
-          path: libomp_binary.zip
+          name: libomp-compiled-by-github
+          path: output/libomp_arm64.zip
