@@ -1,0 +1,20 @@
+name: Get Libomp Binary
+
+on:
+  push:
+    branches: [ "main", "master" ] # সেভ করলেই কাজ শুরু হবে
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch libomp from source
+        run: |
+          curl -L "https://github.com/v8/v8/raw/master/third_party/android_ndk/toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/9.0.8/lib/linux/aarch64/libomp.so" -o libomp.so
+          zip libomp_ready.zip libomp.so
+
+      - name: Upload Zip to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: libomp-original-file
+          path: libomp_ready.zip
